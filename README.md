@@ -3,7 +3,7 @@
 Top-down зомби-выживание для Windows. Пять режимов, пять карт, четыре ствола,
 24 скина и кейсы. Фонарь — единственный источник света: зомби видно только в луче.
 
-**Сайт и скачивание:** https://GITHUB_USER.github.io/nightfall/
+**Сайт и скачивание:** https://dfyroplfspz-lang.github.io/nightfall/
 
 - `index.html` — страница игры
 - `NIGHTFALL_Setup.zip` — установщик (42 МБ). Распаковать, запустить `NIGHTFALL_Setup.exe`
