@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>NIGHTFALL — зомби-выживание от Big Games Studio</title>
+<meta name="description" content="NIGHTFALL: top-down зомби-выживание для Windows. Пять режимов, пять карт, скины и кейсы. Скачать установщик бесплатно.">
+<meta property="og:title" content="NIGHTFALL">
+<meta property="og:description" content="Зомби-выживание сверху вниз. Фонарь — единственный свет.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="shots/shot-torch.jpg">
+<meta name="theme-color" content="#0b0c0f">
+<link rel="icon" href="icon.png">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  /* layout: dark one-column site; torch-lit canvas hero, then quiet content bands */
+  :root {
+    color-scheme: dark;
+    --ink: #0b0c0f;
+    --ink-2: #121419;
+    --panel: #16181f;
+    --line: #2a2e38;
+    --bone: #e9e6e0;
+    --mute: #9aa0ab;
+    --blood: #d6403a;
+    --amber: #e2bc48;
+    --green: #78be5a;
+    --display: "Oswald", "Arial Narrow", sans-serif;
+    --body: "Barlow", system-ui, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--ink); color: var(--bone);
+    font-family: var(--body); font-size: 17px; line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap {
+    width: 100%; max-width: 1080px; margin: 0 auto;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+  h1, h2, h3 { font-family: var(--display); font-weight: 700; margin: 0; text-wrap: balance; letter-spacing: .01em; }
+  h2 { font-size: clamp(26px, 4vw, 38px); text-transform: uppercase; }
+  h3 { font-size: 20px; text-transform: uppercase; letter-spacing: .04em; }
+  p { margin: 0; }
+  a { color: var(--amber); }
+  .eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: .18em;
+             text-transform: uppercase; color: var(--mute); }
+  .band { padding-block: clamp(48px, 7vw, 86px); border-top: 1px solid var(--line); }
+  .band--flat { background: var(--ink-2); }
+  .stack { display: flex; flex-direction: column; gap: 22px; }
+  .lede { font-size: clamp(17px, 2vw, 20px); color: #c9ccd3; max-width: 62ch; }
+
+  /* hero */
+  .hero { position: relative; overflow: hidden; border-bottom: 1px solid var(--line); }
+  #torch { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .hero-inner { position: relative; padding-block: clamp(56px, 9vw, 104px); }
+  .brandline { display: flex; align-items: center; gap: 12px; margin-bottom: 26px; }
+  .badge { width: 46px; height: 46px; border-radius: 11px; background: #16181f;
+           border: 2px solid var(--blood); display: grid; place-items: center;
+           font-family: var(--display); font-weight: 700; font-size: 19px; letter-spacing: .02em; }
+  .brandline span { font-family: var(--mono); font-size: 12px; letter-spacing: .18em; color: var(--mute); }
+  .title { font-size: clamp(58px, 13vw, 132px); line-height: .9; color: var(--blood);
+           text-shadow: 0 6px 0 rgba(0,0,0,.55); }
+  .sub { font-family: var(--display); font-weight: 500; letter-spacing: .34em;
+         text-transform: uppercase; color: #b9bec7; font-size: clamp(13px, 2vw, 18px); margin-top: 14px; }
+  .pitch { margin-top: 24px; max-width: 46ch; color: #c9ccd3; }
+
+  /* download card */
+  .getbox { margin-top: 36px; max-width: 560px; background: rgba(18,20,25,.86);
+            border: 1px solid var(--line); border-radius: 14px; padding: 22px;
+            backdrop-filter: blur(3px); }
+  .getrow { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
+  .btn { appearance: none; border: 0; cursor: pointer; text-decoration: none; display: inline-block; font-family: var(--display);
+         font-weight: 700; font-size: 19px; letter-spacing: .06em; text-transform: uppercase;
+         color: #fff; background: var(--blood); padding: 15px 26px; border-radius: 10px;
+         box-shadow: inset 0 -3px 0 rgba(0,0,0,.35); transition: transform .12s ease, filter .12s ease; }
+  .btn:hover { filter: brightness(1.1); }
+  .btn:active { transform: translateY(1px); }
+  .btn:disabled { background: #2a2d35; color: #767b85; cursor: default; box-shadow: none; }
+  .btn:focus-visible, a:focus-visible, summary:focus-visible { outline: 2px solid var(--amber); outline-offset: 3px; }
+  .meta { font-family: var(--mono); font-size: 13px; color: var(--mute); line-height: 1.7; }
+  .status { margin-top: 14px; font-family: var(--mono); font-size: 13px; color: var(--mute); min-height: 1.4em; }
+  .hash { font-family: var(--mono); font-size: 12px; color: #767b85; word-break: break-all; margin-top: 14px; }
+
+  /* generic grid */
+  .grid { display: grid; gap: 16px; }
+  .g3 { grid-template-columns: repeat(auto-fit, minmax(255px, 1fr)); }
+  .g2 { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+          padding: 20px; min-width: 0; }
+  .card h3 { color: var(--bone); }
+  .card p { color: var(--mute); font-size: 15px; margin-top: 8px; }
+  .tag { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
+         color: var(--amber); }
+  figure { margin: 0; min-width: 0; }
+  figure img { width: 100%; max-width: 100%; display: block; border-radius: 10px;
+               border: 1px solid var(--line); }
+  figcaption { font-family: var(--mono); font-size: 12px; color: var(--mute); margin-top: 8px; }
+
+  ol.steps { counter-reset: s; list-style: none; padding: 0; margin: 0; display: grid; gap: 14px; }
+  ol.steps li { counter-increment: s; display: grid; grid-template-columns: 42px 1fr; gap: 14px;
+                align-items: start; background: var(--panel); border: 1px solid var(--line);
+                border-radius: 10px; padding: 16px; }
+  ol.steps li::before { content: counter(s, decimal-leading-zero); font-family: var(--display);
+                        font-size: 22px; color: var(--blood); }
+  ol.steps b { display: block; font-family: var(--display); letter-spacing: .03em;
+               text-transform: uppercase; font-size: 16px; }
+  ol.steps span { color: var(--mute); font-size: 15px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 15px; }
+  td { padding: 11px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+  td:first-child { color: var(--mute); width: 42%; font-family: var(--mono); font-size: 13px;
+                   text-transform: uppercase; letter-spacing: .08em; }
+  .scroller { overflow-x: auto; }
+
+  footer { padding-block: 40px; border-top: 1px solid var(--line); color: var(--mute); font-size: 14px; }
+  .foot { display: flex; flex-wrap: wrap; gap: 14px; justify-content: space-between; align-items: center; }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style></head>
+<body>
+
+
+<section class="hero">
+  <canvas id="torch" aria-hidden="true"></canvas>
+  <div class="wrap hero-inner">
+    <div class="brandline">
+      <div class="badge">BG</div>
+      <span>Big Games Studio</span>
+    </div>
+    <h1 class="title">NIGHTFALL</h1>
+    <div class="sub">Zombie Survival</div>
+    <p class="pitch">Выживание сверху вниз. Пять режимов, пять карт, четыре ствола,
+      скины и кейсы. Фонарь — единственный свет: зомби видно только там, куда он светит.</p>
+
+    <div class="getbox">
+      <div class="getrow">
+        <a class="btn" id="get" href="NIGHTFALL_Setup.zip" download>Скачать установщик</a>
+        <div class="meta">
+          NIGHTFALL_Setup.zip · 42 МБ<br>
+          Windows 10 / 11 · 64-bit
+        </div>
+      </div>
+      <div class="status">внутри — установщик, игра ставится из него</div>
+      <div class="hash">SHA-256 архива<br>9194739b810e9304eff8984cde74ca71fca85e3ba3a8aa0041a25fe2d1e5c534</div>
+    </div>
+  </div>
+</section>
+
+<section class="band band--flat">
+  <div class="wrap stack">
+    <div class="eyebrow">что это</div>
+    <h2>Ночь, фонарь и очень много зомби</h2>
+    <p class="lede">Волны идут одна за другой, между ними — передышка и ящик с припасами.
+      Города нет, есть пять арен: парковка, сталелитейный цех, станция метро, больничное крыло
+      и парк у реки. Вся графика рисуется кодом, весь звук синтезируется при запуске —
+      поэтому игра весит столько же, сколько один скриншот из современного шутера.</p>
+    <div class="grid g2">
+      <figure>
+        <img src="shots/shot-torch.jpg" alt="Игрок в темноте, луч фонаря выхватывает двух зомби из восемнадцати">
+        <figcaption>вокруг игрока 18 зомби — видно троих, тех, кто в луче</figcaption>
+      </figure>
+      <figure>
+        <img src="shots/shot-fight.jpg" alt="Бой с автоматом, HUD с иконками оружия">
+        <figcaption>АК в скине CRIMSON, слоты оружия с моделями</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<section class="band">
+  <div class="wrap stack">
+    <div class="eyebrow">режимы</div>
+    <h2>Пять способов умереть</h2>
+    <div class="grid g3">
+      <div class="card"><span class="tag">классика</span><h3>Survival</h3>
+        <p>Волны с передышкой, дроп после каждой, босс каждую пятую.</p></div>
+      <div class="card"><span class="tag">счёт ×1.3</span><h3>Endless Rush</h3>
+        <p>Передышек нет. Спавн быстрее на 45%, припасы падают по таймеру.</p></div>
+      <div class="card"><span class="tag">счёт ×1.5</span><h3>Boss Rush</h3>
+        <p>Босс в каждой волне, мелочи вчетверо меньше, старт с дробовиком.</p></div>
+      <div class="card"><span class="tag">счёт ×2</span><h3>Nightmare</h3>
+        <p>+25% скорости, +45% здоровья, волны в полтора раза больше, дропа меньше.</p></div>
+      <div class="card"><span class="tag">5:00</span><h3>Time Attack</h3>
+        <p>Таймер на пять минут, каждое убийство добавляет секунду, все стволы сразу.</p></div>
+      <div class="card" style="border-color:#3a2a2a"><span class="tag">рекорды</span><h3>Отдельно по каждому</h3>
+        <p>Счёт, волна и фраги пишутся по режимам и по картам — видно, где ты реально хорош.</p></div>
+    </div>
+    <figure style="margin-top:8px">
+      <img src="shots/shot-modes.jpg" alt="Экран выбора режима со списком и описанием правил">
+      <figcaption>выбор режима: правила и личный рекорд сразу на карточке</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="band band--flat">
+  <div class="wrap stack">
+    <div class="eyebrow">карты</div>
+    <h2>Пять арен, у каждой свой характер</h2>
+    <div class="grid g2">
+      <figure>
+        <img src="shots/shot-maps.jpg" alt="Экран выбора карты с пятью схемами планировок">
+        <figcaption>превью рисуется тем же генератором, что строит арену</figcaption>
+      </figure>
+      <div class="stack" style="gap:14px">
+        <div class="card"><h3>Parking Lot</h3><p>Открытая площадка, длинные простреливаемые линии.</p></div>
+        <div class="card"><h3>Steel Mill</h3><p>Станки рядами образуют коридоры, легко попасть в клещи.</p></div>
+        <div class="card"><h3>Metro Station</h3><p>Платформа между двумя путевыми траншеями.</p></div>
+        <div class="card"><h3>St. Mercy Ward</h3><p>Комнаты с дверными проёмами, тесные углы.</p></div>
+        <div class="card"><h3>Riverside Park</h3><p>Газон, фонтан в центре, палатки и живые изгороди.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band">
+  <div class="wrap stack">
+    <div class="eyebrow">скины и кейсы</div>
+    <h2>24 скина, три типа кейсов</h2>
+    <p class="lede">Двенадцать скинов на выжившего и двенадцать финишей на оружие, четыре редкости.
+      Кейсы падают с зомби и гарантированно каждую пятую волну. Открытие — рулетка:
+      лента тормозит и встаёт под маркером. Дубликат превращается в скрап, за скрап берётся
+      следующий кейс.</p>
+    <div class="grid g2">
+      <figure>
+        <img src="shots/shot-armory.jpg" alt="Армори: сетка финишей оружия с редкостями">
+        <figcaption>финиш применяется ко всем четырём стволам сразу</figcaption>
+      </figure>
+      <figure>
+        <img src="shots/shot-case.jpg" alt="Рулетка открытия кейса с карточкой результата">
+        <figcaption>рулетка кейса и карточка выпавшего скина</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<section class="band band--flat">
+  <div class="wrap stack">
+    <div class="eyebrow">установка</div>
+    <h2>Четыре шага</h2>
+    <div class="grid g2">
+      <ol class="steps">
+        <li><div><b>Скачай архив</b><span>Кнопка наверху отдаёт NIGHTFALL_Setup.zip.</span></div></li>
+        <li><div><b>Распакуй</b><span>Правый клик → «Извлечь всё». Внутри один файл — NIGHTFALL_Setup.exe.</span></div></li>
+        <li><div><b>Запусти установщик</b><span>Выбери папку, галочки на ярлыки — и «Install». Права администратора не нужны.</span></div></li>
+        <li><div><b>Если ругнулся SmartScreen</b><span>«Подробнее» → «Выполнить в любом случае». Подписи у сборки нет, Windows ругается на любой неизвестный exe.</span></div></li>
+      </ol>
+      <figure>
+        <img src="shots/shot-setup.jpg" alt="Окно установщика: выбор папки и галочки ярлыков">
+        <figcaption>установщик ставит игру для текущего пользователя</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<section class="band">
+  <div class="wrap stack">
+    <div class="eyebrow">требования и мелочи</div>
+    <h2>Что нужно машине</h2>
+    <div class="grid g2">
+      <div class="scroller">
+        <table>
+          <tr><td>система</td><td>Windows 10 или 11, 64-bit</td></tr>
+          <tr><td>место</td><td>60 МБ на диске</td></tr>
+          <tr><td>память</td><td>2 ГБ</td></tr>
+          <tr><td>видео</td><td>любая, игра рисует софтверно</td></tr>
+          <tr><td>управление</td><td>клавиатура и мышь</td></tr>
+          <tr><td>интернет</td><td>не нужен, аккаунта нет</td></tr>
+          <tr><td>рантайм</td><td>ничего ставить не надо — python и библиотеки внутри</td></tr>
+        </table>
+      </div>
+      <div class="stack" style="gap:14px">
+        <div class="card"><h3>Сохранения</h3><p>Рекорды, скины и кейсы лежат в savedata.json рядом с игрой. Скопировал папку — унёс прогресс.</p></div>
+        <div class="card"><h3>Удаление</h3><p>Параметры → Приложения → NIGHTFALL, либо uninstall.bat в папке игры.</p></div>
+        <div class="card"><h3>Управление</h3><p>WASD, мышь, R — перезарядка, 1-4 — оружие, Space — рывок, F — фонарь, F11 — окно/фулскрин.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot">
+    <div>NIGHTFALL 1.0 · сборка от 26.10.2026 · <span style="color:var(--bone)">BIG GAMES STUDIO</span></div>
+    <div class="meta">питон, pygame, ноль ассетов</div>
+  </div>
+</footer>
+
+<script>
+(function () {
+  // ---- torch hero -------------------------------------------------------
+  var cv = document.getElementById('torch');
+  var ctx = cv.getContext('2d');
+  var dpr = Math.min(window.devicePixelRatio || 1, 2);
+  var mobs = [], w = 0, h = 0, px = 0, py = 0, tx = 0, ty = 0, auto = true, t0 = Date.now();
+
+  function layout() {
+    var r = cv.getBoundingClientRect();
+    w = Math.max(320, r.width); h = Math.max(260, r.height);
+    cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    mobs = [];
+    var n = Math.round(w / 95);
+    for (var i = 0; i < n; i++) {
+      mobs.push({ x: Math.random() * w, y: h * (0.3 + Math.random() * 0.62),
+                  s: 0.7 + Math.random() * 0.8, p: Math.random() * 6.28 });
+    }
+    if (auto) { px = tx = w * 0.72; py = ty = h * 0.52; }
+  }
+
+  function mob(m, alpha, warm) {
+    var r = 13 * m.s, sw = Math.sin(Date.now() / 420 + m.p) * 5 * m.s;
+    ctx.globalAlpha = alpha;
+    ctx.strokeStyle = warm ? '#6f8a56' : '#1b1e24';
+    ctx.fillStyle = warm ? '#7f9c62' : '#1b1e24';
+    ctx.lineWidth = 4 * m.s; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(m.x, m.y); ctx.lineTo(m.x + sw, m.y + 15 * m.s); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(m.x, m.y); ctx.lineTo(m.x - sw, m.y + 15 * m.s); ctx.stroke();
+    ctx.beginPath(); ctx.arc(m.x, m.y, r, 0, 6.2832); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(m.x - r, m.y - 2); ctx.lineTo(m.x - r - 11 * m.s, m.y + 4); ctx.stroke();
+    ctx.beginPath(); ctx.arc(m.x - r * 0.3, m.y - r * 0.9, r * 0.52, 0, 6.2832); ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+
+  function frame() {
+    if (auto) {
+      var k = (Date.now() - t0) / 2600;
+      tx = w * (0.5 + 0.34 * Math.cos(k)); ty = h * (0.52 + 0.14 * Math.sin(k * 1.3));
+    }
+    px += (tx - px) * 0.12; py += (ty - py) * 0.12;
+
+    ctx.clearRect(0, 0, w, h);
+    var g = ctx.createLinearGradient(0, 0, 0, h);
+    g.addColorStop(0, '#0d0e12'); g.addColorStop(1, '#090a0d');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+
+    for (var i = 0; i < mobs.length; i++) mob(mobs[i], 0.55, false);
+
+    var R = Math.max(150, Math.min(300, w * 0.22));
+    ctx.save();
+    ctx.beginPath(); ctx.arc(px, py, R, 0, 6.2832); ctx.clip();
+    var lg = ctx.createRadialGradient(px, py, 0, px, py, R);
+    lg.addColorStop(0, 'rgba(255,226,170,.17)'); lg.addColorStop(1, 'rgba(255,226,170,0)');
+    ctx.fillStyle = lg; ctx.fillRect(px - R, py - R, R * 2, R * 2);
+    for (var j = 0; j < mobs.length; j++) {
+      var d = Math.hypot(mobs[j].x - px, mobs[j].y - py);
+      if (d < R) mob(mobs[j], Math.max(0, 1 - d / R), true);
+    }
+    ctx.restore();
+    requestAnimationFrame(frame);
+  }
+
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  layout();
+  window.addEventListener('resize', layout);
+  cv.parentNode.addEventListener('pointermove', function (e) {
+    var r = cv.getBoundingClientRect();
+    tx = e.clientX - r.left; ty = e.clientY - r.top; auto = false;
+  });
+  cv.parentNode.addEventListener('pointerleave', function () { auto = true; t0 = Date.now(); });
+  if (reduced) { px = tx = w * 0.72; py = ty = h * 0.5; ctx.clearRect(0,0,w,h); frameOnce(); }
+  else requestAnimationFrame(frame);
+  function frameOnce() {
+    ctx.fillStyle = '#0c0d11'; ctx.fillRect(0, 0, w, h);
+    for (var i = 0; i < mobs.length; i++) mob(mobs[i], 0.55, false);
+    var R = 240;
+    ctx.save(); ctx.beginPath(); ctx.arc(px, py, R, 0, 6.2832); ctx.clip();
+    for (var j = 0; j < mobs.length; j++) {
+      var d = Math.hypot(mobs[j].x - px, mobs[j].y - py);
+      if (d < R) mob(mobs[j], Math.max(0, 1 - d / R), true);
+    }
+    ctx.restore();
+  }
+
+})();
+</script>
+</body>
+</html>
