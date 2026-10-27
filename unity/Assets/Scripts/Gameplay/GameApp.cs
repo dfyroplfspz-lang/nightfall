@@ -57,13 +57,46 @@ namespace Nightfall
         float _menuT;
 
         // ---- input ---------------------------------------------------------
+        /// <summary>
+        /// One frame of intent, decoupled from UnityEngine.Input so the self-test can
+        /// script a whole run without a window.
+        /// </summary>
+        public struct InputFrame
+        {
+            public Vector2 wish;
+            public Vector2 mouse;
+            public bool fireHeld, firePressed;
+            public bool dash, reload, toggleTorch, nextWeapon, prevWeapon;
+            public int selectSlot;      // -1 for none
+        }
+
+        InputFrame _input;
         Vector2 _wish;
         Vector2 _mouse;
         bool _fireHeld, _firePressed;
+        bool _booted;
 
         // ------------------------------------------------------------- setup
+        /// <summary>Set by the self-test before it adds the component, so Awake skips
+        /// cameras, audio hardware and the save file.</summary>
+        public static bool HeadlessRequested;
+        public static int HeadlessSeed = 7;
+
         void Awake()
         {
+            if (HeadlessRequested) BootHeadless(HeadlessSeed);
+            else Boot();
+        }
+
+        /// <summary>
+        /// Everything the game needs before the first frame. Called from Awake in the
+        /// editor and directly by the self-test.
+        /// </summary>
+        public void Boot()
+        {
+            if (_booted) return;
+            _booted = true;
+
             Application.targetFrameRate = 60;
             QualitySettings.vSyncCount = 1;
             Screen.fullScreen = true;
@@ -99,6 +132,24 @@ namespace Nightfall
             Reset(null, null);
             UnityEngine.Cursor.visible = false;
         }
+
+        /// <summary>Headless variant: no cameras, no audio hardware, no cursor.</summary>
+        public void BootHeadless(int seed)
+        {
+            if (_booted) return;
+            _booted = true;
+            headless = true;
+
+            audio = new ProcAudio();
+            save = new SaveData();
+            inventory = save.ToInventory();
+            rng = new Rng(seed);
+            menu = new Menu(save, inventory, rng);
+            Reset(null, null);
+        }
+
+        /// <summary>True while the self-test drives the game, so nothing touches the GPU.</summary>
+        public bool headless;
 
         void BuildLoader()
         {
@@ -202,6 +253,7 @@ namespace Nightfall
 
         public void Persist()
         {
+            if (headless) return;
             save.FromInventory(inventory);
             save.Store();
             inventoryDirty = false;
@@ -300,21 +352,39 @@ namespace Nightfall
         }
 
         // ------------------------------------------------------- game update
-        void ReadGameInput()
+        InputFrame ReadGameInput()
         {
-            _wish = Vector2.zero;
-            if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow)) _wish.x -= 1f;
-            if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow)) _wish.x += 1f;
-            if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow)) _wish.y -= 1f;
-            if (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow)) _wish.y += 1f;
+            var inp = new InputFrame { selectSlot = -1, mouse = _mouse };
 
-            _fireHeld = Input.GetMouseButton(0);
-            _firePressed = Input.GetMouseButtonDown(0);
+            if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow)) inp.wish.x -= 1f;
+            if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow)) inp.wish.x += 1f;
+            if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow)) inp.wish.y -= 1f;
+            if (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow)) inp.wish.y += 1f;
+
+            inp.fireHeld = Input.GetMouseButton(0);
+            inp.firePressed = Input.GetMouseButtonDown(0);
+            inp.dash = Input.GetKeyDown(KeyCode.Space);
+            inp.reload = Input.GetKeyDown(KeyCode.R);
+            inp.toggleTorch = Input.GetKeyDown(KeyCode.F);
+
+            float wheel = Input.GetAxisRaw("Mouse ScrollWheel");
+            inp.nextWeapon = Input.GetKeyDown(KeyCode.E) || wheel > 0.01f;
+            inp.prevWeapon = Input.GetKeyDown(KeyCode.Q) || wheel < -0.01f;
+
+            if (Input.GetKeyDown(KeyCode.Alpha1)) inp.selectSlot = 0;
+            else if (Input.GetKeyDown(KeyCode.Alpha2)) inp.selectSlot = 1;
+            else if (Input.GetKeyDown(KeyCode.Alpha3)) inp.selectSlot = 2;
+            else if (Input.GetKeyDown(KeyCode.Alpha4)) inp.selectSlot = 3;
+
+            return inp;
         }
 
         void UpdateGame(float dt)
         {
-            ReadGameInput();
+            _input = ReadGameInput();
+            _wish = _input.wish;
+            _fireHeld = _input.fireHeld;
+            _firePressed = _input.firePressed;
             _menuT += dt;
 
             if (state == GameState.GameOver)
@@ -345,7 +415,30 @@ namespace Nightfall
                 return;
             }
 
-            HandleGameKeys();
+            if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.P))
+            {
+                _resumeState = state;
+                state = GameState.Paused;
+                audio.Play("ui");
+                return;
+            }
+
+            SimulateFrame(dt, _input);
+        }
+
+        /// <summary>
+        /// One frame of the run, driven purely by the given intent. The editor feeds it
+        /// the keyboard and mouse; the self-test feeds it a script.
+        /// </summary>
+        public void SimulateFrame(float dt, InputFrame inp)
+        {
+            _input = inp;
+            _wish = inp.wish;
+            _mouse = inp.mouse;
+            _fireHeld = inp.fireHeld;
+            _firePressed = inp.firePressed;
+
+            ApplyActions(inp);
 
             Player p = player;
             timeAlive += dt;
@@ -381,42 +474,26 @@ namespace Nightfall
             if (!p.alive) EndRun();
         }
 
-        void HandleGameKeys()
+        void ApplyActions(InputFrame inp)
         {
-            if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.P))
+            if (inp.reload && player.weapon.StartReload()) audio.Play("reload", 0.7f);
+
+            if (inp.dash && player.TryDash(inp.wish))
             {
-                _resumeState = state;
-                state = GameState.Paused;
-                audio.Play("ui");
-                return;
+                audio.Play("dash", 0.6f);
+                particles.Smoke(player.pos, 5);
             }
-            if (Input.GetKeyDown(KeyCode.R))
-            {
-                if (player.weapon.StartReload()) audio.Play("reload", 0.7f);
-            }
-            if (Input.GetKeyDown(KeyCode.Space))
-            {
-                if (player.TryDash(_wish))
-                {
-                    audio.Play("dash", 0.6f);
-                    particles.Smoke(player.pos, 5);
-                }
-            }
-            if (Input.GetKeyDown(KeyCode.Alpha1)) player.Select(0);
-            if (Input.GetKeyDown(KeyCode.Alpha2)) player.Select(1);
-            if (Input.GetKeyDown(KeyCode.Alpha3)) player.Select(2);
-            if (Input.GetKeyDown(KeyCode.Alpha4)) player.Select(3);
-            if (Input.GetKeyDown(KeyCode.F))
+
+            if (inp.selectSlot >= 0) player.Select(inp.selectSlot);
+
+            if (inp.toggleTorch)
             {
                 player.flashlightOn = !player.flashlightOn;
                 audio.Play("ui", 0.5f);
             }
-            if (Input.GetKeyDown(KeyCode.Q)) player.NextWeapon(-1);
-            if (Input.GetKeyDown(KeyCode.E)) player.NextWeapon(1);
 
-            float wheel = Input.GetAxisRaw("Mouse ScrollWheel");
-            if (wheel > 0.01f) player.NextWeapon(1);
-            else if (wheel < -0.01f) player.NextWeapon(-1);
+            if (inp.nextWeapon) player.NextWeapon(1);
+            if (inp.prevWeapon) player.NextWeapon(-1);
         }
 
         void RebuildGrid()

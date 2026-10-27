@@ -80,6 +80,12 @@ namespace Nightfall.EditorTools
             AssetDatabase.SaveAssets();
         }
 
+        [MenuItem("NIGHTFALL/Run self-test")]
+        static void RunSelftest()
+        {
+            Debug.Log(Selftest.RunAll(900));
+        }
+
         [MenuItem("NIGHTFALL/Open save folder")]
         static void OpenSaveFolder()
         {

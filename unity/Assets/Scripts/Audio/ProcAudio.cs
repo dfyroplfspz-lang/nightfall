@@ -34,6 +34,12 @@ namespace Nightfall
             Build();
         }
 
+        /// <summary>Silent instance for the self-test: no voices, no synthesis, no output.</summary>
+        public ProcAudio()
+        {
+            _muted = true;
+        }
+
         // ------------------------------------------------------ dsp helpers
         static int N(float seconds) { return Mathf.Max(1, (int)(seconds * Rate)); }
 
