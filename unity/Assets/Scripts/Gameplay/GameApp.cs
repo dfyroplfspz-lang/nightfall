@@ -85,14 +85,14 @@ namespace Nightfall
         void Awake()
         {
             if (HeadlessRequested) BootHeadless(HeadlessSeed);
-            else Boot();
+            else BootFull();
         }
 
         /// <summary>
-        /// Everything the game needs before the first frame. Called from Awake in the
-        /// editor and directly by the self-test.
+        /// Everything the game needs before the first frame. Named BootFull so it does
+        /// not shadow the Boot screen class in this namespace.
         /// </summary>
-        public void Boot()
+        public void BootFull()
         {
             if (_booted) return;
             _booted = true;
