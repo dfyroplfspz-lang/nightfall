@@ -33,4 +33,12 @@ Assets/Editor/            one-time project setup
 
 The game boots itself from `Bootstrap.cs`, so it runs from any open scene.
 
+## Self-test
+
+`NIGHTFALL -> Run self-test` in the menu bar drives a scripted run of every mode
+with no window: it reports waves, kills, hit rate, the zombie types that showed
+up, and fails loudly on a NaN, an escape from the arena, or negative health.
+`Selftest.RunAll(frames)` is a plain static call, so it also runs outside the
+editor against a stub of the engine.
+
 BIG GAMES STUDIO

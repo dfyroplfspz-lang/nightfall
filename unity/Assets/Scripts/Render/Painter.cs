@@ -31,6 +31,14 @@ namespace Nightfall
             if (vc == null) vc = Resources.Load<Shader>("Shaders/VertexColor");
             Shader va = Shader.Find("Nightfall/VertexColorAdd");
             if (va == null) va = Resources.Load<Shader>("Shaders/VertexColorAdd");
+            if (vc == null || va == null)
+            {
+                Debug.LogError("NIGHTFALL: the shaders in Assets/Resources/Shaders are missing. " +
+                               "Re-import the project, or check that VertexColor.shader and " +
+                               "VertexColorAdd.shader compiled.");
+                return;
+            }
+
             _mat = new Material(vc) { hideFlags = HideFlags.HideAndDontSave };
             _addMat = new Material(va) { hideFlags = HideFlags.HideAndDontSave };
         }
@@ -39,6 +47,7 @@ namespace Nightfall
         public static void Begin(bool additive = false)
         {
             EnsureMaterials();
+            if (_mat == null) return;
             if (_inBatch) End();
             _additive = additive;
             (additive ? _addMat : _mat).SetPass(0);
