@@ -17,7 +17,6 @@ namespace Nightfall
     {
         static Material _mat;
         static Material _addMat;
-        static Material _texMat;
         static bool _inBatch;
         static bool _additive;
 
@@ -32,12 +31,8 @@ namespace Nightfall
             if (vc == null) vc = Resources.Load<Shader>("Shaders/VertexColor");
             Shader va = Shader.Find("Nightfall/VertexColorAdd");
             if (va == null) va = Resources.Load<Shader>("Shaders/VertexColorAdd");
-            Shader tx = Shader.Find("Nightfall/TexturedQuad");
-            if (tx == null) tx = Resources.Load<Shader>("Shaders/TexturedQuad");
-
             _mat = new Material(vc) { hideFlags = HideFlags.HideAndDontSave };
             _addMat = new Material(va) { hideFlags = HideFlags.HideAndDontSave };
-            _texMat = new Material(tx) { hideFlags = HideFlags.HideAndDontSave };
         }
 
         /// <summary>Start a batch. additive=true for glows and muzzle flashes.</summary>
@@ -333,34 +328,6 @@ namespace Nightfall
                 c.a = a / rings * 2.2f;
                 Circle(cx, cy, r * t, c);
             }
-        }
-
-        // ----------------------------------------------------------- textures
-        /// <summary>
-        /// Blit a texture rect in pixel space. Used for the baked arena floor and the
-        /// map previews, which are real textures rather than vector shapes.
-        /// </summary>
-        public static void TexturedQuad(Texture tex, Rect dest, Rect uv, Color tint)
-        {
-            EnsureMaterials();
-            bool was = _inBatch;
-            bool wasAdd = _additive;
-            if (was) End();
-
-            _texMat.mainTexture = tex;
-            _texMat.SetPass(0);
-            GL.PushMatrix();
-            GL.LoadPixelMatrix(0f, S.WIDTH, S.HEIGHT, 0f);
-            GL.Begin(GL.QUADS);
-            GL.Color(tint);
-            GL.TexCoord2(uv.xMin, uv.yMax); GL.Vertex3(dest.xMin, dest.yMin, 0f);
-            GL.TexCoord2(uv.xMax, uv.yMax); GL.Vertex3(dest.xMax, dest.yMin, 0f);
-            GL.TexCoord2(uv.xMax, uv.yMin); GL.Vertex3(dest.xMax, dest.yMax, 0f);
-            GL.TexCoord2(uv.xMin, uv.yMin); GL.Vertex3(dest.xMin, dest.yMax, 0f);
-            GL.End();
-            GL.PopMatrix();
-
-            if (was) Begin(wasAdd);
         }
     }
 }

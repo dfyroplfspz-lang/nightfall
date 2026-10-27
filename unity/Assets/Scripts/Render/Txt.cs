@@ -135,16 +135,17 @@ namespace Nightfall
                 Vector2 sz = st.CalcSize(_content);
                 Vector2 off = Offset(sz, it.anchor);
 
+                // GUI.color multiplies the style colour, so it stays neutral and the
+                // style alone carries the tint - otherwise every label squares its own colour
+                GUI.color = Color.white;
+
                 if (it.shadow > 0f)
                 {
-                    Color sh = new Color(0f, 0f, 0f, it.color.a);
-                    GUI.color = sh;
-                    st.normal.textColor = sh;
+                    st.normal.textColor = new Color(0f, 0f, 0f, it.color.a);
                     GUI.Label(new Rect(it.x + off.x + it.shadow, it.y + off.y + it.shadow,
                                        sz.x + 4f, sz.y + 2f), _content, st);
                 }
 
-                GUI.color = it.color;
                 st.normal.textColor = it.color;
                 GUI.Label(new Rect(it.x + off.x, it.y + off.y, sz.x + 4f, sz.y + 2f), _content, st);
             }

@@ -163,6 +163,31 @@ namespace Nightfall
             float left = cam.x - 40f, top = cam.y - 40f;
             float right = cam.x + S.WIDTH + 40f, bottom = cam.y + S.HEIGHT + 40f;
 
+            // all the glows first, then all the cores: two batches for the whole
+            // system instead of a blend-mode flip per particle
+            bool anyGlow = false;
+            for (int i = 0; i < _items.Count; i++)
+                if (_items[i].glow) { anyGlow = true; break; }
+
+            if (anyGlow)
+            {
+                Painter.Flip(true);
+                for (int i = 0; i < _items.Count; i++)
+                {
+                    Particle p = _items[i];
+                    if (!p.glow) continue;
+                    if (p.pos.x < left || p.pos.x > right || p.pos.y < top || p.pos.y > bottom) continue;
+
+                    float t = Mathf.Max(0f, p.life / p.maxLife);
+                    float r = p.radius * (p.shrink ? t : 1f);
+                    if (r < 0.6f) continue;
+
+                    Painter.Circle(p.pos.x - cam.x, p.pos.y - cam.y, r * 2f,
+                                   S.WithA(p.color, 190f / 255f * t));
+                }
+                Painter.Flip(false);
+            }
+
             for (int i = 0; i < _items.Count; i++)
             {
                 Particle p = _items[i];
@@ -172,14 +197,7 @@ namespace Nightfall
                 float r = p.radius * (p.shrink ? t : 1f);
                 if (r < 0.6f) continue;
 
-                float x = p.pos.x - cam.x, y = p.pos.y - cam.y;
-                if (p.glow)
-                {
-                    Painter.Flip(true);
-                    Painter.Circle(x, y, r * 2f, S.WithA(p.color, 190f / 255f * t));
-                    Painter.Flip(false);
-                }
-                Painter.Circle(x, y, r, p.color);
+                Painter.Circle(p.pos.x - cam.x, p.pos.y - cam.y, r, p.color);
             }
         }
 

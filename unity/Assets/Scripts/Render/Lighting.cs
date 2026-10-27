@@ -12,9 +12,9 @@ namespace Nightfall
     /// </summary>
     public static class Lighting
     {
-        const int CELL = 16;
-        const int GX = S.WIDTH / CELL;    // 80
-        const int GY = S.HEIGHT / CELL;   // 45
+        const int CELL = 20;
+        const int GX = S.WIDTH / CELL;    // 64
+        const int GY = S.HEIGHT / CELL;   // 36
 
         static readonly float[] _alpha = new float[(GX + 1) * (GY + 1)];
 

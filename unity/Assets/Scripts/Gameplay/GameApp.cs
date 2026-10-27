@@ -106,8 +106,10 @@ namespace Nightfall
             {
                 new Boot.Step("warming up the night", () =>
                 {
-                    Txt.Measure("NIGHTFALL", 92, true);
-                    Txt.Measure("NIGHTFALL", 26, true);
+                    // build the styles up front; measuring needs OnGUI, so it waits
+                    Txt.Style(92, true);
+                    Txt.Style(26, true);
+                    Txt.Style(19, false);
                 }),
                 new Boot.Step("synthesizing audio", () => audio.Play("ui", 0f))
             };
