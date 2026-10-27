@@ -18,6 +18,7 @@ namespace Nightfall
         {
             public string mode, map;
             public int frames, waves, kills, maxZombies, pickupsSeen, bosses, deaths;
+            public int shots, hits, bulletsPeak, wallStops;
             public int cases, scrap;
             public readonly HashSet<string> typesSeen = new HashSet<string>();
             public readonly List<string> problems = new List<string>();
@@ -78,6 +79,7 @@ namespace Nightfall
                     Check(res, z.pos, "zombie " + z.spec.key);
                 }
                 res.pickupsSeen = Mathf.Max(res.pickupsSeen, app.pickups.Count);
+                res.bulletsPeak = Mathf.Max(res.bulletsPeak, app.bullets.Count);
 
                 Check(res, app.player.pos, "player");
                 if (app.player.hp < 0f) res.problems.Add("player hp went negative");
@@ -85,6 +87,8 @@ namespace Nightfall
 
             res.waves = app.wave;
             res.kills = app.player.kills;
+            res.shots = app.player.shots;
+            res.hits = app.player.hits;
             res.cases = app.inventory.CaseCount();
             res.scrap = app.inventory.scrap;
 
@@ -110,7 +114,7 @@ namespace Nightfall
             int failures = 0;
 
             sb.AppendLine("NIGHTFALL self-test");
-            sb.AppendLine("mode        map     waves kills maxZ types                  status");
+            sb.AppendLine("mode        map     waves kills shots  hits maxZ bul types                  status");
 
             for (int m = 0; m < Modes.All.Count; m++)
             {
@@ -120,9 +124,9 @@ namespace Nightfall
                 var types = new List<string>(r.typesSeen);
                 types.Sort();
 
-                sb.AppendLine(string.Format("{0,-11} {1,-7} {2,5} {3,5} {4,4} {5,-22} {6}",
-                    r.mode, r.map, r.waves, r.kills, r.maxZombies,
-                    string.Join(",", types.ToArray()), r.Ok ? "ok" : "FAIL"));
+                sb.AppendLine(string.Format("{0,-11} {1,-7} {2,5} {3,5} {4,5} {5,5} {6,4} {7,3} {8,-22} {9}",
+                    r.mode, r.map, r.waves, r.kills, r.shots, r.hits, r.maxZombies,
+                    r.bulletsPeak, string.Join(",", types.ToArray()), r.Ok ? "ok" : "FAIL"));
 
                 if (!r.Ok)
                 {
