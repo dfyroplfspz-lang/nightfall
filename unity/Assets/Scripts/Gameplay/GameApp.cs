@@ -184,7 +184,13 @@ namespace Nightfall
             if (newMap != null) mapdef = newMap;
 
             world = new Arena(seed, mapdef);
-            player = new Player(world.center);
+
+            // metro puts a pillar on the world centre and park puts a fountain there,
+            // so the spawn looks for clear ground instead of trusting the midpoint
+            Vector2 start = world.center;
+            if (world.Blocked(start, S.P_RADIUS + 6f))
+                start = world.FreePoint(rng, world.center, 0f, 460f, S.P_RADIUS + 10f);
+            player = new Player(start);
             particles = new ParticleManager(world, seed);
 
             zombies.Clear();
@@ -234,6 +240,9 @@ namespace Nightfall
 
         // ----------------------------------------------------------- helpers
         public int ZombiesLeft() { return zombies.Count + _spawnQueue.Count; }
+
+        /// <summary>Top-left of the view in world space, for tests that aim by hand.</summary>
+        public Vector2 CameraPos { get { return _cameraPos; } }
 
         void Shake(float amount) { _shakeMag = Mathf.Min(26f, _shakeMag + amount); }
 

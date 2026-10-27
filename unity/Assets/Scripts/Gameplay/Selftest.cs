@@ -56,9 +56,20 @@ namespace Nightfall
                 float t = f * dt;
                 inp.wish = new Vector2(Mathf.Cos(t * 0.7f), Mathf.Sin(t * 0.9f));
 
-                // sweep the aim across the screen, which also sweeps the torch
-                inp.mouse = new Vector2(S.WIDTH * 0.5f + Mathf.Cos(t * 1.7f) * 560f,
-                                        S.HEIGHT * 0.5f + Mathf.Sin(t * 1.3f) * 300f);
+                // aim at the nearest zombie, which is what a player does and what
+                // actually exercises hits, kills, drops and the wave advance
+                Zombie target = Nearest(app);
+                if (target != null)
+                {
+                    Vector2 screen = target.pos - app.CameraPos;
+                    inp.mouse = new Vector2(MathUtil.Clamp(screen.x, 0f, S.WIDTH),
+                                            MathUtil.Clamp(screen.y, 0f, S.HEIGHT));
+                }
+                else
+                {
+                    inp.mouse = new Vector2(S.WIDTH * 0.5f + Mathf.Cos(t * 1.7f) * 560f,
+                                            S.HEIGHT * 0.5f + Mathf.Sin(t * 1.3f) * 300f);
+                }
 
                 inp.fireHeld = true;
                 inp.firePressed = (f % 7) == 0;
@@ -94,6 +105,20 @@ namespace Nightfall
 
             Object.Destroy(go);
             return res;
+        }
+
+        static Zombie Nearest(GameApp app)
+        {
+            Zombie best = null;
+            float bestD = float.MaxValue;
+            for (int i = 0; i < app.zombies.Count; i++)
+            {
+                Zombie z = app.zombies[i];
+                if (!z.alive) continue;
+                float d = (z.pos - app.player.pos).sqrMagnitude;
+                if (d < bestD) { bestD = d; best = z; }
+            }
+            return best;
         }
 
         static void Check(Result res, Vector2 p, string who)
@@ -151,14 +176,20 @@ namespace Nightfall
             {
                 MapDef m = Maps.All[i];
                 var arena = new Arena(1234 + i, m);
+                var rng = new Rng(1234 + i);
+                Vector2 start = arena.center;
+                if (arena.Blocked(start, S.P_RADIUS + 6f))
+                    start = arena.FreePoint(rng, arena.center, 0f, 460f, S.P_RADIUS + 10f);
+
                 bool ok = arena.obstacles.Count > 4
                           && arena.spawnPoints.Count > 20
-                          && !arena.Blocked(arena.center, 40f)
+                          && !arena.Blocked(start, S.P_RADIUS + 2f)
                           && arena.floor.rects.Count + arena.floor.circles.Count > 0;
                 sb.Append(m.key).Append(ok ? " ok  " : " FAIL  ");
                 if (!ok)
                     sb.Append("[props ").Append(arena.obstacles.Count)
-                      .Append(", spawns ").Append(arena.spawnPoints.Count).Append("] ");
+                      .Append(", spawns ").Append(arena.spawnPoints.Count)
+                      .Append(", start ").Append(start).Append("] ");
             }
             return sb.ToString();
         }
